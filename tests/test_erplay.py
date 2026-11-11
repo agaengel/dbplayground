@@ -92,3 +92,18 @@ def test_default_diagram_is_mermaid_mimebundle(con):
     bundle = d._repr_mimebundle_()
     assert bundle["text/vnd.mermaid"].startswith("erDiagram")
     assert "STUDENT ||--o{ ENROLLMENT" in bundle["text/vnd.mermaid"]
+
+
+def test_connect_uses_one_file_per_name(tmp_path, monkeypatch):
+    monkeypatch.setattr(erplay, "DB_DIR", tmp_path)
+    a, b = erplay.connect("a"), erplay.connect("b")   # both open at once: no lock clash
+    a.execute("create table t (i int)")
+    assert (tmp_path / "a.duckdb").exists() and (tmp_path / "b.duckdb").exists()
+    assert erplay._introspect(b)[0] == {}
+    # the lock is per process (= per notebook kernel), so check from a second process
+    import subprocess, sys
+    code = ("import erplay, sys; erplay.DB_DIR = __import__('pathlib').Path(sys.argv[1])\n"
+            "try: erplay.connect('a')\nexcept RuntimeError as e: print(e)")
+    out = subprocess.run([sys.executable, "-c", code, str(tmp_path)], capture_output=True,
+                         text=True, env={**__import__("os").environ, "PYTHONPATH": "."})
+    assert "already open" in out.stdout, out

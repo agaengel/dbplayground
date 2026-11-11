@@ -11,13 +11,27 @@ from pathlib import Path
 
 import duckdb
 
-DB_PATH = Path(__file__).parent / "work" / "playground.duckdb"
+DB_DIR = Path(__file__).parent / "work"
 
 
-def connect(path=DB_PATH):
-    """Open (or create) the persistent playground database."""
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
-    return duckdb.connect(str(path))
+def connect(name="playground"):
+    """Open (or create) a persistent database in work/.
+
+    Give every notebook its own name, e.g. connect("flughafen") -> work/flughafen.duckdb.
+    A DuckDB file can only be open in one kernel at a time, so separate files mean
+    notebooks never block each other. A path (containing / or ending in .duckdb) is used as is.
+    """
+    path = Path(name)
+    if path.suffix != ".duckdb" and len(path.parts) == 1:
+        path = DB_DIR / f"{name}.duckdb"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        return duckdb.connect(str(path))
+    except duckdb.IOException as e:
+        raise RuntimeError(
+            f"{path} is already open in another notebook. Use a different name, e.g. "
+            f"connect('my-notebook'), or shut down the other kernel (Kernel > Shut Down Kernel)."
+        ) from e
 
 
 def reset(con):

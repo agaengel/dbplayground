@@ -26,7 +26,7 @@ jobs:
           docker run --rm --user "$(id -u)" -e HOME=/tmp \
             -v "$PWD":/home/student/playground -w /home/student/playground/notebooks \
             --entrypoint jupyter dbplayground \
-            nbconvert --to notebook --execute playground.ipynb --output /tmp/out.ipynb
+            nbconvert --to notebook --execute playground.ipynb er-to-schema.ipynb --output-dir /tmp/out
 
       - name: JupyterLab starts and answers
         run: |

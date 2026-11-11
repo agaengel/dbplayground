@@ -5,7 +5,7 @@ A throw-away-able place to learn SQL: **DuckDB + JupyterLab in one container**.
 * define schemas with SQL and run queries (`%%sql` cells)
 * generate an **ER diagram** from the current database (rendered as Mermaid in JupyterLab; `engine="graphviz"` as fallback)
 * go the other way: write an ER diagram (Mermaid `erDiagram` text) and get the **tables + foreign keys generated**
-* the database is a single file, `work/playground.duckdb`, that survives container restarts
+* every notebook has its own database file in `work/` (`erplay.connect("name")` → `work/name.duckdb`), so notebooks never block each other (DuckDB allows one open connection per file); data survives container restarts
 
 DuckDB was chosen over Postgres because there is no server, user or password to set up, and its SQL is
 very close to Postgres. (Want a real server later? Add a `postgres` service to `compose.yaml`.)
@@ -21,18 +21,20 @@ very close to Postgres. (Want a real server later? Add a `postgres` service to `
    ```
 4. Open <http://localhost:8888> and start `notebooks/playground.ipynb`.
 
-Stop with `Ctrl+C`; reset everything by deleting `work/playground.duckdb`.
+Stop with `Ctrl+C`; reset a notebook's data by deleting its file in `work/`.
 
 Rootless Podman note: if the notebook can't write to `work/`, run
 `podman compose up` with `userns_mode: keep-id` added to the service, or `chmod -R a+rwX work notebooks`.
 
-## ER diagram as input
+## ER diagram as input (notebook `er-to-schema.ipynb`)
 
 ```
 erDiagram
     AUTHOR ||--o{ BOOK : writes
-    AUTHOR { int id PK
-             string name }
+    AUTHOR {
+        int id PK
+        string name
+    }
 ```
 
 * `A ||--o{ B` – one A, many B → B gets a foreign key to A (`|o` / `o|`: optional → nullable)
