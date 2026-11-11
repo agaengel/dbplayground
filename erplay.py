@@ -68,7 +68,31 @@ def _introspect(con):
     return tables, fks
 
 
-def er_diagram(con):
+class Mermaid:
+    """Mermaid text that JupyterLab (>= 4.1) renders as a diagram (mime type text/vnd.mermaid)."""
+
+    def __init__(self, text):
+        self.text = text
+
+    def _repr_mimebundle_(self, include=None, exclude=None):
+        return {"text/vnd.mermaid": self.text, "text/plain": self.text}
+
+    def __str__(self):
+        return self.text
+
+
+def er_diagram(con, engine="mermaid"):
+    """ER diagram of the current database, rendered inline in Jupyter.
+
+    engine="mermaid" (default) needs JupyterLab >= 4.1; engine="graphviz" uses the
+    Graphviz binary instead.
+    """
+    if engine == "graphviz":
+        return er_diagram_graphviz(con)
+    return Mermaid(schema_to_mermaid(con))
+
+
+def er_diagram_graphviz(con):
     """Return a Graphviz object (renders inline in Jupyter)."""
     import graphviz
 
@@ -107,7 +131,7 @@ def schema_to_mermaid(con):
     for child, ccols, parent, _ in fks:
         nullable = any(c["nullable"] for c in tables[child]["cols"] if c["name"] in ccols)
         left = "|o" if nullable else "||"
-        out.append(f"    {parent} {left}--o{{ {child} : has")
+        out.append(f"    {parent} {left}--o{{ {child} : {ccols[0]}")
     for t, info in tables.items():
         out.append(f"    {t} {{")
         for c in info["cols"]:

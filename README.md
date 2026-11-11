@@ -3,7 +3,7 @@
 A throw-away-able place to learn SQL: **DuckDB + JupyterLab in one container**.
 
 * define schemas with SQL and run queries (`%%sql` cells)
-* generate an **ER diagram** from the current database
+* generate an **ER diagram** from the current database (rendered as Mermaid in JupyterLab; `engine="graphviz"` as fallback)
 * go the other way: write an ER diagram (Mermaid `erDiagram` text) and get the **tables + foreign keys generated**
 * the database is a single file, `work/playground.duckdb`, that survives container restarts
 

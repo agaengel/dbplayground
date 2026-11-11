@@ -60,7 +60,7 @@ def test_round_trip(con):
 
 def test_diagram_has_all_tables(con):
     erplay.apply_mermaid(con, MERMAID, show=False)
-    src = erplay.er_diagram(con).source
+    src = erplay.er_diagram_graphviz(con).source
     for t in ("STUDENT", "COURSE", "TEACHER", "ENROLLMENT"):
         assert t in src
 
@@ -83,4 +83,12 @@ def test_fk_reference_with_different_case(con):
     tables, fks = erplay._introspect(con)
     assert set(tables) == {"Airport", "Flight"}
     assert [(c, p) for c, _, p, _ in fks] == [("Flight", "Airport")]
-    assert "\tairport [" not in erplay.er_diagram(con).source  # no phantom lower-case node
+    assert "\tairport [" not in erplay.er_diagram_graphviz(con).source  # no phantom lower-case node
+
+
+def test_default_diagram_is_mermaid_mimebundle(con):
+    erplay.apply_mermaid(con, MERMAID, show=False)
+    d = erplay.er_diagram(con)
+    bundle = d._repr_mimebundle_()
+    assert bundle["text/vnd.mermaid"].startswith("erDiagram")
+    assert "STUDENT ||--o{ ENROLLMENT" in bundle["text/vnd.mermaid"]
