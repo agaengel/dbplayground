@@ -21,12 +21,12 @@ jobs:
             --entrypoint sh dbplayground \
             -c "pip install --quiet --user pytest && python -m pytest -q tests"
 
-      - name: Execute notebook end-to-end (in container)
+      - name: Execute all notebooks end-to-end (in container)
         run: |
           docker run --rm --user "$(id -u)" -e HOME=/tmp \
             -v "$PWD":/home/student/playground -w /home/student/playground/notebooks \
-            --entrypoint jupyter dbplayground \
-            nbconvert --to notebook --execute playground.ipynb er-to-schema.ipynb --output-dir /tmp/out
+            --entrypoint sh dbplayground \
+            -c "jupyter nbconvert --to notebook --execute *.ipynb --output-dir /tmp/out"
 
       - name: JupyterLab starts and answers
         run: |
