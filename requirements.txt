@@ -1,0 +1,6 @@
+jupyterlab>=4.2
+duckdb>=1.1
+jupysql>=0.10.14
+duckdb-engine>=0.13
+pandas>=2.2
+graphviz>=0.20

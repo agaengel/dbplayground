@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  container:
+    name: Build image, run tests and notebook inside it
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t dbplayground .
+
+      - name: Unit tests (in container)
+        run: |
+          docker run --rm --user "$(id -u)" -e HOME=/tmp \
+            -v "$PWD":/home/student/playground -w /home/student/playground \
+            --entrypoint sh dbplayground \
+            -c "pip install --quiet --user pytest && python -m pytest -q tests"
+
+      - name: Execute notebook end-to-end (in container)
+        run: |
+          docker run --rm --user "$(id -u)" -e HOME=/tmp \
+            -v "$PWD":/home/student/playground -w /home/student/playground/notebooks \
+            --entrypoint jupyter dbplayground \
+            nbconvert --to notebook --execute playground.ipynb --output /tmp/out.ipynb
+
+      - name: JupyterLab starts and answers
+        run: |
+          docker run -d --name lab -p 8888:8888 dbplayground
+          for i in $(seq 30); do curl -sf http://127.0.0.1:8888/api >/dev/null && exit 0; sleep 2; done
+          docker logs lab; exit 1

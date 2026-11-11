@@ -1,0 +1,9 @@
+services:
+  playground:
+    build: .
+    ports:
+      - "127.0.0.1:8888:8888"   # only reachable from your own machine
+    volumes:
+      - ./notebooks:/home/student/playground/notebooks:Z
+      - ./work:/home/student/playground/work:Z        # the .duckdb file lives here
+      - ./erplay.py:/home/student/playground/erplay.py:Z

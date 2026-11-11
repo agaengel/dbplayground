@@ -1,0 +1,5 @@
+work/*
+!work/.gitkeep
+__pycache__/
+.ipynb_checkpoints/
+.venv/
