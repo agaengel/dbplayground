@@ -74,3 +74,13 @@ def test_reset_drops_tables_with_foreign_keys(con):
     erplay.apply_mermaid(con, MERMAID, show=False)
     erplay.reset(con)
     assert erplay._introspect(con)[0] == {}
+
+
+def test_fk_reference_with_different_case(con):
+    con.execute("create table Airport (id integer primary key, name varchar)")
+    con.execute("create table Flight (id integer primary key, "
+                "airport_id integer references airport (id))")
+    tables, fks = erplay._introspect(con)
+    assert set(tables) == {"Airport", "Flight"}
+    assert [(c, p) for c, _, p, _ in fks] == [("Flight", "Airport")]
+    assert "\tairport [" not in erplay.er_diagram(con).source  # no phantom lower-case node

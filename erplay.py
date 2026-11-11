@@ -46,6 +46,9 @@ def _introspect(con):
             {"name": c, "type": typ, "nullable": nullable}
         )
     fks = []  # (child, child_cols, parent, parent_cols)
+    # SQL identifiers are case-insensitive, but DuckDB stores a FK's referenced table
+    # as it was typed (`REFERENCES airport` for table `Airport`): map to the real name.
+    real = {t.lower(): t for t in tables}
     for t, ctype, cols, ref, refcols in con.sql(
         "select table_name, constraint_type, constraint_column_names, "
         "referenced_table, referenced_column_names "
@@ -58,6 +61,7 @@ def _introspect(con):
         elif ctype == "UNIQUE":
             tables[t]["uq"].update(cols)
         elif ctype == "FOREIGN KEY":
+            ref = real.get(ref.lower(), ref)
             fks.append((t, list(cols), ref, list(refcols)))
             for c in cols:
                 tables[t]["fk"][c] = ref
